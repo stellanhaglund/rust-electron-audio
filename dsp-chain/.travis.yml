@@ -1,0 +1,32 @@
+language: rust
+rust:
+- nightly
+notifications:
+  email:
+  - mitchell.nordine@gmail.com
+os:
+- linux
+env:
+  matrix:
+  - LD_LIBRARY_PATH: /usr/local/lib
+  global:
+    secure: H/FCcjwpQQNeWGRM6zrDojNwRJud/FsAu5N6iGz2kxog0v7FFSuFreYeklNfwX+4Mf+BtYYpblZ8xHF24tOmJHeOMKwGPBoopyjXzJx+QVd3mlj30dmvm1/jcy/7pzH0Q2GhVhSbBtV+BCQvjUXZ/PNk9/wiMSxnNtTchyAOpHQ=
+install:
+- curl -O http://www.portaudio.com/archives/pa_stable_v19_20140130.tgz
+- tar xfz pa_stable_v19_20140130.tgz
+- (cd portaudio/ && ./configure && make && sudo make install)
+before_script:
+- rustc --version
+- cargo --version
+script:
+- cargo build --verbose
+- cargo test --verbose
+- cargo doc --verbose
+after_success: |
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  cargo doc &&
+  echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html &&
+  sudo pip install ghp-import &&
+  ghp-import -n target/doc &&
+  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
